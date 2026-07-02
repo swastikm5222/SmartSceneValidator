@@ -472,22 +472,3 @@ def validate_kitchen(image):
         weak_objects_found
     )
 
-    return build_response(
-
-    "INVALID",
-
-    "INVALID IMAGE",
-
-    "classifier",
-
-    confidence,
-
-    predicted_class,
-
-    detected_objects,
-
-    strong_objects_found,
-
-    weak_objects_found
-
-)

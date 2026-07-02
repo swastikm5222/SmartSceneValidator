@@ -319,8 +319,8 @@ def validate_name_board(image):
             "reason": f"Image quality check failed: {exc}",
         }
 
-    if quality_result.get("status") == "INVALID":
-        return quality_result
+    if not quality_result.is_valid:
+        return quality_result.to_dict()
 
     # --------------------------------
     # SWIN TINY INFERENCE

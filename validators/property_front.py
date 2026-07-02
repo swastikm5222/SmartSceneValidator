@@ -88,9 +88,9 @@ def validate_property_front(image):
         image
     )
 
-    if quality_result["status"] == "INVALID":
+    if not quality_result.is_valid:
 
-        return quality_result
+        return quality_result.to_dict()
 
     # ------------------------------------------
     # IMAGE PREPROCESSING
