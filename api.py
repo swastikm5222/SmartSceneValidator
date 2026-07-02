@@ -8,6 +8,7 @@ from validators.name_board import validate_name_board
 from validators.kitchen import validate_kitchen
 from validators.property_front import validate_property_front
 from validators.approach_property import validate_approach_property
+from validators.interior_property import validate_interior_property as validate_interior_property_validator
 
 app = FastAPI(
     title="SMC Image Validation API",
@@ -178,26 +179,7 @@ async def validate_interior_property(file: UploadFile = File(...)):
         if image is None:
             return _invalid_image_response()
 
-        selfie_result = validate_selfie(image)
-        kitchen_result = validate_kitchen(image)
-        property_result = validate_property_front(image)
-        approach_result = validate_approach_property(image)
-
-        if (
-            selfie_result.get("status") == "VALID"
-            or kitchen_result.get("status") == "VALID"
-            or property_result.get("status") == "VALID"
-            or approach_result.get("status") == "VALID"
-        ):
-            return {
-                "status": "INVALID",
-                "reason": "INVALID IMAGE",
-            }
-
-        return {
-            "status": "VALID",
-            "reason": "VALID IMAGE",
-        }
+        return validate_interior_property_validator(image)
     except Exception as exc:  # noqa: BLE001
         return JSONResponse(
             status_code=500,

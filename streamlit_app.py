@@ -17,7 +17,7 @@ label = st.selectbox(
         "Kitchen Photograph",
         "Front View of Property",
         "Approach To Property",
-        "Interior Of Property"
+        "Interior Property"
     ]
 )
 
@@ -32,7 +32,7 @@ API_ENDPOINTS = {
     "Kitchen Photograph": "http://127.0.0.1:8000/validate/kitchen",
     "Front View of Property": "http://127.0.0.1:8000/validate/property-front",
     "Approach To Property": "http://127.0.0.1:8000/validate/approach-property",
-    "Interior Of Property": "http://127.0.0.1:8000/validate/interior-property",
+    "Interior Property": "http://127.0.0.1:8000/validate/interior-property",
 }
 
 
