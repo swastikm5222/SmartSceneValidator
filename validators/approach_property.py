@@ -18,14 +18,15 @@ device = torch.device(
 # ----------------------------
 
 model = timm.create_model(
-    "efficientnet_b0",
+    "swinv2_tiny_window8_256",
     pretrained=False,
     num_classes=2
 )
 
+
 model.load_state_dict(
     torch.load(
-        "models/approach_property_classifier.pth",
+        "models/approach_property_swinv2_tiny.pth",
         map_location=device
     )
 )
@@ -40,7 +41,7 @@ model.eval()
 
 transform = transforms.Compose([
     transforms.ToPILImage(),
-    transforms.Resize((224, 224)),
+    transforms.Resize((256, 256)),
     transforms.ToTensor()
 ])
 
