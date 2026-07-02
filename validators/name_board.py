@@ -4,29 +4,17 @@ import re
 import numpy as np
 import torch
 import torch.nn.functional as F
-import timm
 import easyocr
 from PIL import Image
 from torchvision import transforms
 
+from models.model_manager import MODEL_LOAD_ERRORS, MODELS, device
 from validators.image_quality import validate_image_quality
 
 
 # --------------------------------
 # PATHS / CONFIG
 # --------------------------------
-
-PROJECT_ROOT = os.path.dirname(
-    os.path.dirname(
-        os.path.abspath(__file__)
-    )
-)
-
-MODEL_PATH = os.path.join(
-    PROJECT_ROOT,
-    "models",
-    "name_board_swin_tiny.pth"
-)
 
 # Swin-Tiny model was trained with different mean/std.
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -45,42 +33,11 @@ ADDRESS_DIGIT_RUN_PATTERN = re.compile(r"\d{3,}")
 
 
 # --------------------------------
-# DEVICE
-# --------------------------------
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-# --------------------------------
 # SWIN TINY MODEL
 # --------------------------------
 
-def _load_model():
-    model = timm.create_model(
-        "swin_tiny_patch4_window7_224",
-        pretrained=False,
-        num_classes=2,
-    )
-    
-
-    state_dict = torch.load(
-        MODEL_PATH,
-        map_location=device,
-        weights_only=True,
-    )
-    model.load_state_dict(state_dict)
-
-    model.to(device)
-    model.eval()
-    return model
-
-
-try:
-    model = _load_model()
-    _model_load_error = None
-except Exception as exc:  # noqa: BLE001 - we want to surface this at call time
-    model = None
-    _model_load_error = str(exc)
+model = MODELS["name_board"]
+_model_load_error = MODEL_LOAD_ERRORS["name_board"]
 
 
 # --------------------------------

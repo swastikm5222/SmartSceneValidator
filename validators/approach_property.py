@@ -1,38 +1,15 @@
 import torch
 import torch.nn.functional as F
-import timm
 from torchvision import transforms
 
-
-# ----------------------------
-# DEVICE
-# ----------------------------
-
-device = torch.device(
-    "cuda" if torch.cuda.is_available() else "cpu"
-)
+from models.model_manager import MODELS, device
 
 
 # ----------------------------
 # MODEL
 # ----------------------------
 
-model = timm.create_model(
-    "swinv2_tiny_window8_256",
-    pretrained=False,
-    num_classes=2
-)
-
-
-model.load_state_dict(
-    torch.load(
-        "models/approach_property_swinv2_tiny.pth",
-        map_location=device
-    )
-)
-
-model.to(device)
-model.eval()
+model = MODELS["approach_property"]
 
 
 # ----------------------------

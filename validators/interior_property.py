@@ -1,26 +1,12 @@
 import torch
 import torch.nn.functional as F
-import timm
 
 from torchvision import transforms
 from ultralytics import YOLO
 
+from models.model_manager import MODELS, device
 from validators.image_quality import (
     validate_image_quality
-)
-
-# =====================================================
-# DEVICE
-# =====================================================
-
-device = torch.device(
-    "cuda"
-    if torch.cuda.is_available()
-    else "cpu"
-)
-
-print(
-    f"Interior Property Validator Device : {device}"
 )
 
 # =====================================================
@@ -75,26 +61,7 @@ INTERIOR_OBJECTS = (
 # SWIN V2 TINY MODEL
 # =====================================================
 
-model = timm.create_model(
-
-    "swinv2_tiny_window8_256",
-    pretrained=False,
-    num_classes=2
-)
-
-model.load_state_dict(
-    torch.load(
-        "models/interior_property_swinv2_tiny_best.pth",
-        map_location=device
-    )
-)
-
-model.to(device)
-model.eval()
-
-print(
-    "Interior Property SwinV2 Tiny Loaded Successfully"
-)
+model = MODELS["interior_property"]
 
 # =====================================================
 # IMAGE TRANSFORM

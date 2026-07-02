@@ -1,4 +1,5 @@
-models/
+models/*
+!models/*.py
 *.pth
 __pycache__/
 *.pyc
