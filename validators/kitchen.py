@@ -2,9 +2,22 @@ import torch
 import torch.nn.functional as F
 
 from torchvision import transforms
-from ultralytics import YOLO
-
 from models.model_manager import MODELS, device
+
+try:
+    # Optional import: if YOLO is loaded at startup, this import isn't required.
+    from ultralytics import YOLO  # type: ignore
+except Exception:  # pragma: no cover
+    YOLO = None  # type: ignore
+
+
+
+
+
+
+
+
+
 from validators.image_quality import (
     validate_image_quality
 )
@@ -13,9 +26,11 @@ from validators.image_quality import (
 # YOLO MODEL
 # =====================================================
 
-yolo_model = YOLO(
-    "yolov8n.pt"
-)
+# Loaded once at FastAPI startup; validators should use that model.
+# If startup didn’t run (unit tests / scripts), we keep the error explicit.
+
+yolo_model = None
+
 
 # =====================================================
 # KITCHEN OBJECTS
@@ -86,10 +101,18 @@ MIN_WEAK_OBJECTS_REQUIRED = 1
 
 def detect_kitchen_objects(image):
 
+    global yolo_model
+    if yolo_model is None:
+        raise RuntimeError(
+            "YOLO model is not loaded. FastAPI startup did not run or YOLO failed to load."
+        )
+
     results = yolo_model(
+
         image,
         verbose=False
     )
+
 
     detected_objects = []
 

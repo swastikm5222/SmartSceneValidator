@@ -2,9 +2,11 @@ import torch
 import torch.nn.functional as F
 
 from torchvision import transforms
-from ultralytics import YOLO
-
 from models.model_manager import MODELS, device
+
+# YOLO is injected at FastAPI startup into module-level `yolo_model`.
+# Keeping YOLO import out prevents import-time weight loading.
+
 from validators.image_quality import (
     validate_image_quality
 )
@@ -13,9 +15,11 @@ from validators.image_quality import (
 # YOLO MODEL
 # =====================================================
 
-yolo_model = YOLO(
-    "yolov8n.pt"
-)
+# Injected once by FastAPI startup in api.py.
+# If startup didn’t run, detection will fail fast.
+
+yolo_model = None
+
 
 # =====================================================
 # INTERIOR OBJECTS
@@ -103,10 +107,17 @@ MIN_WEAK_OBJECTS_REQUIRED = 2
 
 def detect_interior_objects(image):
 
+    global yolo_model
+    if yolo_model is None:
+        raise RuntimeError(
+            "YOLO model is not loaded. FastAPI startup did not run or YOLO failed to load."
+        )
+
     results = yolo_model(
         image,
         verbose=False
     )
+
 
     detected_objects = []
 

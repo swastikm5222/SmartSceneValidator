@@ -1,8 +1,12 @@
-from fastapi import FastAPI, UploadFile, File, Request
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import JSONResponse
 import cv2
 import numpy as np
 
+import os
+from ultralytics import YOLO
+
+from validators.tag_dispatch import TAG_TO_VALIDATOR
 from validators.selfie import validate_selfie
 from validators.name_board import validate_name_board
 from validators.kitchen import validate_kitchen
@@ -15,6 +19,36 @@ app = FastAPI(
     description="API for validating uploaded images",
     version="1.0.0"
 )
+
+# Load YOLO once during app startup to avoid import-time weight loading.
+@app.on_event("startup")
+def _startup_load_yolo():
+    yoloweights = os.environ.get("YOLO_WEIGHTS_PATH", "yolov8n.pt")
+    app.state.yolo_model = YOLO(yoloweights)
+
+    # Inject into validators modules that expect module-level `yolo_model`.
+    try:
+        import validators.kitchen as kitchen_validator
+        kitchen_validator.yolo_model = app.state.yolo_model
+    except Exception:
+        pass
+
+    try:
+        import validators.interior_property as interior_validator
+        interior_validator.yolo_model = app.state.yolo_model
+    except Exception:
+        pass
+
+
+
+TAG_TO_VALIDATOR = {
+    "selfie_with_person_met": validate_selfie,
+    "approach_to_property": validate_approach_property,
+    "front_image_with_name_board": validate_name_board,
+    "interior_rooms_photograph": validate_interior_property_validator,
+    "kitchen_photograph": validate_kitchen,
+    "front_view_of_property": validate_property_front
+}
 
 
 # --------------------------------------------------
@@ -59,6 +93,34 @@ def _invalid_image_response():
         "status": "INVALID",
         "reason": "Unable to read image",
     }
+
+
+# --------------------------------------------------
+# TAG-BASED VALIDATOR DISPATCH
+# --------------------------------------------------
+
+@app.post("/validate")
+async def validate_image_by_tag(
+    tag: str = Form(...),
+    file: UploadFile = File(...)
+):
+    validator = TAG_TO_VALIDATOR.get(tag)
+
+    if validator is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Unknown tag"
+        )
+
+    contents = await file.read()
+    image = _decode_uploaded_image(contents)
+
+    if image is None:
+        return _invalid_image_response()
+
+    result = validator(image)
+
+    return result
 
 
 # --------------------------------------------------
@@ -185,3 +247,31 @@ async def validate_interior_property(file: UploadFile = File(...)):
             status_code=500,
             content={"status": "ERROR", "reason": f"Interior property validation failed: {exc}"},
         )
+
+
+@app.post("/validate/images")
+async def validate_images(
+    tag: str = None,
+    file: UploadFile = File(...)
+):
+    validator = TAG_TO_VALIDATOR.get(tag)
+
+    if validator is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Unknown tag"
+        )
+
+    result = []
+    
+    contents = await file.read()
+    image = _decode_uploaded_image(contents)
+
+    if image is None:
+        result.append(_invalid_image_response())
+        
+
+    result = validator(image)
+
+
+    return result
