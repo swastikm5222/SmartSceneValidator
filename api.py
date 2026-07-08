@@ -6,7 +6,6 @@ import numpy as np
 import os
 from ultralytics import YOLO
 
-from validators.tag_dispatch import TAG_TO_VALIDATOR
 from validators.selfie import validate_selfie
 from validators.name_board import validate_name_board
 from validators.kitchen import validate_kitchen
@@ -248,30 +247,3 @@ async def validate_interior_property(file: UploadFile = File(...)):
             content={"status": "ERROR", "reason": f"Interior property validation failed: {exc}"},
         )
 
-
-@app.post("/validate/images")
-async def validate_images(
-    tag: str = None,
-    file: UploadFile = File(...)
-):
-    validator = TAG_TO_VALIDATOR.get(tag)
-
-    if validator is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Unknown tag"
-        )
-
-    result = []
-    
-    contents = await file.read()
-    image = _decode_uploaded_image(contents)
-
-    if image is None:
-        result.append(_invalid_image_response())
-        
-
-    result = validator(image)
-
-
-    return result
